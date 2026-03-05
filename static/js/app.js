@@ -461,9 +461,16 @@ function renderGrid() {
                 else if (ai >= totalMoves - seg) phaseClass = ' phase-late';
             }
             const cls = `cell card-cell${m.current ? ' current' : ''}${blank ? ' blank' : ''}${phaseClass}`;
-            const symbol = blank ? '□' : `${m.value || ''}${m.suit_symbol || ''}`;
-            const color = blank ? '#ffffff' : m.color === 'red' ? '#dc2626' : '#111827';
-            root.innerHTML += `<div class="${cls}" style="color:${color}">${symbol}</div>`;
+            let cardInner;
+            if (blank) {
+                cardInner = '<span class="card-suit-big" style="color:#a3a3a3;font-size:18px">&#9723;</span>';
+            } else {
+                const val = m.value || '';
+                const suit = m.suit_symbol || '';
+                const col = m.color === 'red' ? '#dc2626' : '#111827';
+                cardInner = `<span class="card-corner" style="color:${col}">${val}<br>${suit}</span><span class="card-suit-big" style="color:${col}">${suit}</span>`;
+            }
+            root.innerHTML += `<div class="${cls}">${cardInner}</div>`;
         }
     }
 }
