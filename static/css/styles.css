@@ -387,3 +387,75 @@ body.embed-mode .container {
 
 .card-cell.phase-early.blank { background: linear-gradient(160deg, #bfdbfe, #93c5fd); }
 .card-cell.phase-late.blank  { background: linear-gradient(160deg, #fed7aa, #fdba74); }
+
+/* ── Project write-up section ─────────────────────────────────────────────── */
+.project-doc {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.project-doc h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--theme-primary);
+    margin: 0 0 10px 0;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--panel-border);
+}
+
+.project-doc h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 14px 0 6px 0;
+}
+
+.project-doc p {
+    margin: 6px 0;
+    line-height: 1.6;
+}
+
+.doc-list {
+    padding-left: 20px;
+    margin: 6px 0;
+    line-height: 1.7;
+}
+
+.doc-list li {
+    margin-bottom: 2px;
+}
+
+.doc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin: 8px 0;
+}
+
+.doc-table th {
+    background: var(--panel-muted);
+    padding: 6px 10px;
+    text-align: left;
+    font-weight: 700;
+    border: 1px solid var(--panel-border);
+}
+
+.doc-table td {
+    padding: 5px 10px;
+    border: 1px solid var(--panel-border);
+}
+
+.doc-table tr:nth-child(even) td {
+    background: var(--panel-muted);
+}
+
+.project-doc code {
+    background: var(--panel-muted);
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.82rem;
+    font-family: 'Azeret Mono', monospace;
+}
