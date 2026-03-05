@@ -31,7 +31,7 @@ def env_flag(name: str, default: bool) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
-ENABLE_PLAYGROUND = env_flag("ENABLE_PLAYGROUND", False)
+ENABLE_PLAYGROUND = env_flag("ENABLE_PLAYGROUND", True)
 ENABLE_GIF_EXPORT = env_flag("ENABLE_GIF_EXPORT", True)
 ENABLE_HISTORY_TAB = env_flag("ENABLE_HISTORY_TAB", True)
 

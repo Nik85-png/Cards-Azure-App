@@ -296,17 +296,26 @@
         (function () {
             const tabs   = document.querySelectorAll('.page-tab');
             const panels = document.querySelectorAll('.page-panel');
+            var chartsRendered = false;
 
             function showPanel(id) {
                 panels.forEach(function (p) { p.classList.toggle('active', p.id === 'panel-' + id); });
                 tabs.forEach(function (t)   { t.classList.toggle('active', t.dataset.panel === id); });
-                // Reflow Plotly charts once visible so they render at correct size
                 if (id === 'statistics') {
-                    setTimeout(function () {
-                        document.querySelectorAll('[id$="Chart"]').forEach(function (el) {
-                            if (el.children.length) { Plotly.relayout(el, {}); }
-                        });
-                    }, 60);
+                    if (!chartsRendered) {
+                        // First visit: render charts now that panel is visible
+                        chartsRendered = true;
+                        setTimeout(function () {
+                            if (typeof window.renderCharts === 'function') { window.renderCharts(); }
+                        }, 80);
+                    } else {
+                        // Subsequent visits: just resize to fit
+                        setTimeout(function () {
+                            document.querySelectorAll('[id$="Chart"]').forEach(function (el) {
+                                if (el.children.length) { Plotly.relayout(el, {}); }
+                            });
+                        }, 60);
+                    }
                 }
             }
 

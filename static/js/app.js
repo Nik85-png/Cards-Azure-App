@@ -577,7 +577,7 @@ function renderCharts() {
                 x: ['Total', 'Success', 'Failed'],
                 y: [trials.length, successful.length, failed.length],
                 type: 'bar',
-                marker: { color: ['#146c94', '#10b981', '#ef4444'] }
+                marker: { color: ['#667eea', '#10b981', '#ef4444'] }
             }
         ],
         chartLayout('Count'),
@@ -593,7 +593,7 @@ function renderCharts() {
                     return rate(group.filter((t) => t.outcome === 'success').length, group.length);
                 }),
                 type: 'bar',
-                marker: { color: '#2a9d8f' },
+                marker: { color: '#764ba2' },
                 textposition: 'outside',
                 texttemplate: '%{y:.1f}%'
             }
@@ -646,7 +646,7 @@ function renderCharts() {
                 x: ['With Blank', 'Without Blank'],
                 y: [blankSuccessRate, noBlankSuccessRate],
                 type: 'bar',
-                marker: { color: ['#2a9d8f', '#94a3b8'] },
+                marker: { color: ['#667eea', '#94a3b8'] },
                 textposition: 'outside',
                 texttemplate: '%{y:.1f}%'
             }
@@ -678,6 +678,9 @@ function renderCharts() {
 
     window.addEventListener('resize', resizeCharts);
 }
+
+// Expose for lazy rendering from the page-tab switcher in index.html
+window.renderCharts = renderCharts;
 
 // ── Messiness thresholds for clean/messy filter ─────────────────────────────
 function messinessThresholds() {
@@ -993,7 +996,6 @@ async function init() {
     renderTrialSelect();
     renderTrial();
     bindControls();
-    renderCharts();
 }
 
 init();

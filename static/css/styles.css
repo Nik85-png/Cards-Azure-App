@@ -1,9 +1,9 @@
 :root {
     --theme-dark: #0d1b2a;
     --theme-on-dark: #f2f5f7;
-    --theme-primary: #146c94;
-    --theme-complementary: #2a9d8f;
-    --theme-secondary: #f4a261;
+    --theme-primary: #667eea;
+    --theme-complementary: #764ba2;
+    --theme-secondary: #fbbf24;
     --panel-bg: #ffffff;
     --panel-border: #e2e8f0;
     --panel-muted: #f8fafc;
@@ -19,7 +19,7 @@
 body {
     margin: 0;
     font-family: "Azeret Mono", monospace;
-    background: linear-gradient(135deg, var(--theme-dark) 0%, #12395a 50%, var(--theme-primary) 100%);
+    background: linear-gradient(135deg, #0d1b2a 0%, #1a0533 50%, #667eea 100%);
     color: var(--text-main);
     padding: 20px;
 }
@@ -34,13 +34,19 @@ body {
 }
 
 .header {
-    border-bottom: 2px solid var(--panel-border);
-    padding-bottom: 16px;
+    border-bottom: 3px solid transparent;
+    border-image: linear-gradient(135deg, var(--theme-primary), var(--theme-complementary)) 1;
+    padding-bottom: 18px;
+    margin-bottom: 4px;
 }
 
 .header h1 {
     margin: 0 0 8px;
     font-size: 2rem;
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-complementary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .header p {
