@@ -459,3 +459,102 @@ body.embed-mode .container {
     font-size: 0.82rem;
     font-family: 'Azeret Mono', monospace;
 }
+
+/* ── Page-level tab nav ───────────────────────────────────────────────────── */
+.page-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 18px 0 4px;
+}
+
+.page-tab {
+    padding: 10px 22px;
+    border: 2px solid var(--panel-border);
+    border-radius: 10px;
+    background: var(--panel-muted);
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    color: var(--text-main);
+}
+
+.page-tab:hover {
+    background: #e2e8f0;
+}
+
+.page-tab.active {
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-complementary));
+    color: #fff;
+    border-color: transparent;
+}
+
+.page-tab--accent {
+    border-color: var(--theme-secondary);
+    color: var(--theme-primary);
+}
+
+.page-tab--accent.active {
+    background: linear-gradient(135deg, #f59e0b, var(--theme-secondary));
+    color: #fff;
+    border-color: transparent;
+}
+
+/* ── Page panels ──────────────────────────────────────────────────────────── */
+.page-panel {
+    display: none;
+}
+
+.page-panel.active {
+    display: block;
+}
+
+/* ── Overview call-to-action buttons ─────────────────────────────────────── */
+.primary-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-complementary));
+    color: #fff;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.primary-btn:hover { opacity: 0.88; }
+
+.accent-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f59e0b, var(--theme-secondary));
+    color: #fff;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.accent-btn:hover { opacity: 0.88; }
+
+/* ── Playground iframe wrapper ────────────────────────────────────────────── */
+.playground-wrap {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.playground-wrap iframe {
+    width: 100%;
+    height: 900px;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+}
+

@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -12,232 +12,262 @@
 </head>
 <body>
     <div id="app" class="container">
+
         <header class="header">
             <h1>Interactive Card Sorting Analysis</h1>
-            <p>Spatial organization, strategy quality, and blank-card usage.</p>
+            <p>Spatial organisation, strategy quality, and blank-card usage &mdash; 229 trials, 9 analysis types.</p>
         </header>
 
         <section class="stats" id="stats"></section>
 
-        <section class="controls card">
-            <label for="analysisSelect">Analysis Type</label>
-            <select id="analysisSelect"></select>
-            <p id="analysisExplanation" class="muted"></p>
+        <!-- Page-level tab nav -->
+        <nav class="page-tabs">
+            <button class="page-tab active" data-panel="overview">Overview</button>
+            <button class="page-tab" data-panel="animations">Animations</button>
+            <button class="page-tab" data-panel="statistics">Statistics</button>
+            <button class="page-tab page-tab--accent" data-panel="playground">Try Yourself (Beta)</button>
+        </nav>
 
-            <label for="trialSelect">Trial</label>
-            <div id="participantSelectWrap" style="display:none">
-                <label for="participantSelect">Participant</label>
-                <select id="participantSelect"></select>
+        <!-- â”€â”€ OVERVIEW PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <section id="panel-overview" class="page-panel active">
+          <div class="project-doc">
+
+            <div class="card">
+              <h2>Project Overview</h2>
+              <p>This project investigates how people organise information spatially and the cognitive strategies they employ when solving card arrangement tasks.</p>
+              <p>Participants used an interactive 8&times;8 grid to arrange playing cards (Kings, Queens, Jacks, and in some conditions, blank cards), while every movement was tracked.</p>
+              <p><strong>Core question:</strong> what separates successful problem-solvers from those who struggle?</p>
+              <p>The live viewer supports participant-level progression analysis, including separate participant/trial selection for repeated attempts, retry-to-success tracing, and chronological trial inspection with messiness context.</p>
+              <div style="margin-top:16px">
+                <button class="page-tab-link primary-btn" data-goto="animations">Open Interactive Viewer &rarr;</button>
+                <button class="page-tab-link accent-btn" data-goto="playground" style="margin-left:10px">Try It Yourself (Beta) &rarr;</button>
+              </div>
             </div>
-            <select id="trialSelect"></select>
 
-            <div class="outcome-filter" id="outcomeFilter"></div>
-
-            <div class="trial-picker-row">
-                <button id="openPickerBtn" type="button">Choose Trials&hellip;</button>
+            <div class="card">
+              <h2>What We Measured</h2>
+              <p>We analysed <strong>229 trials</strong> across four task conditions:</p>
+              <table class="doc-table">
+                <thead><tr><th>Condition</th><th>Description</th><th>Trials</th></tr></thead>
+                <tbody>
+                  <tr><td>KQ</td><td>King and Queen only</td><td>56</td></tr>
+                  <tr><td>KQB</td><td>King, Queen, and Blank</td><td>62</td></tr>
+                  <tr><td>KQJ</td><td>King, Queen, and Jack</td><td>52</td></tr>
+                  <tr><td>KQJB</td><td>King, Queen, Jack, and Blank</td><td>59</td></tr>
+                </tbody>
+              </table>
+              <p style="margin-top:10px">For each trial we captured: every card placement (position and sequence), total moves, spatial organisation pattern, success or failure outcome, and strategic tool usage (blank cards).</p>
             </div>
 
-            <div class="buttons">
-                <button id="resetBtn" type="button">Reset</button>
-                <button id="prevBtn" type="button">Prev</button>
-                <button id="playBtn" type="button" class="primary">Play</button>
-                <button id="nextBtn" type="button">Next</button>
+            <div class="card">
+              <h2>Nine Analysis Views</h2>
+              <p>The explorer is organised into <strong>9 analysis views</strong>, each designed for a different decision question:</p>
+              <ol class="doc-list">
+                <li><strong>Successful Clean (15+ moves)</strong> &mdash; long successful sequences with organised play</li>
+                <li><strong>Failed Messy (&lt;15 moves)</strong> &mdash; short unsuccessful attempts with unstable organisation</li>
+                <li><strong>All Successful</strong> &mdash; full successful pool across conditions</li>
+                <li><strong>All Failed</strong> &mdash; full failed pool for failure-pattern comparison</li>
+                <li><strong>Blank-Card Impact</strong> &mdash; compares outcomes and behaviour with vs without blank-card usage</li>
+                <li><strong>Retry &amp; Success Recovery Progression</strong> &mdash; participant-level repeated attempts with separate participant/trial selection</li>
+                <li><strong>Condition Focus (KQ/KQB/KQJ/KQJB)</strong> &mdash; behaviour split by rule-set complexity</li>
+                <li><strong>Move-Efficiency Patterns</strong> &mdash; compares low-move vs high-move completion strategies</li>
+                <li><strong>Messiness &amp; Outcome Relationship</strong> &mdash; links spatial organisation quality to success probability</li>
+              </ol>
+              <p class="muted" style="margin-top:8px">Together, these views let you move from broad cohort patterns to participant-level progression without leaving the same interface.</p>
             </div>
 
-            <label for="speedRange">Speed: <span id="speedLabel">1.2x</span></label>
-            <input id="speedRange" type="range" min="150" max="2000" value="800" />
-            <p id="moveCounter" class="counter">Move 0 / 0</p>
+            <div class="card">
+              <h2>Key Findings</h2>
+              <h3>1) Organisation Matters More Than Effort</h3>
+              <ul class="doc-list">
+                <li>Successful trials: average messiness deterioration = <strong>+0.21 per move</strong></li>
+                <li>Failed trials: average messiness deterioration = <strong>+0.34 per move</strong></li>
+                <li>Failures showed a <strong>63% faster organisational decline</strong> <em>(p = 0.0085)</em></li>
+              </ul>
+              <p class="muted">Interpretation: success was not about trying harder &mdash; it was about staying systematic as complexity increased.</p>
+              <h3>2) Blank Card Advantage</h3>
+              <p>When blank cards were available (KQB, KQJB), using them improved outcomes substantially:</p>
+              <table class="doc-table">
+                <thead><tr><th>Group</th><th>Success Rate</th></tr></thead>
+                <tbody>
+                  <tr><td>KQB &mdash; used blank</td><td>81.1% (30/37)</td></tr>
+                  <tr><td>KQB &mdash; no blank</td><td>52.0% (13/25)</td></tr>
+                  <tr><td>KQJB &mdash; used blank</td><td>60.9% (14/23)</td></tr>
+                  <tr><td>KQJB &mdash; no blank</td><td>25.0% (9/36)</td></tr>
+                </tbody>
+              </table>
+              <p style="margin-top:8px">Overall uplift: <strong>+29% to +36%</strong> in success rates <em>(chi-square, p &lt; 0.01)</em>.</p>
+              <h3>3) Learning and Adaptation</h3>
+              <p>Only <strong>14%</strong> of participants who failed initially recovered on later attempts.</p>
+              <p class="muted">Early strategy selection was critical, and self-correction after failure was uncommon.</p>
+              <h3>4) Messiness as a Predictor</h3>
+              <p>Messiness score: <code>messiness = (1/n) &times; &sum;( &radic;((x&#8342;&minus;x&#772;)&sup2; + (y&#8342;&minus;y&#772;)&sup2;) )</code></p>
+              <ul class="doc-list">
+                <li>Clean trials <em>(messiness &lt; 2.0)</em>: <strong>68%</strong> success</li>
+                <li>Messy trials <em>(messiness &gt; 3.5)</em>: <strong>18%</strong> success</li>
+              </ul>
+              <p class="muted">Spatial organisation was a strong predictor of performance.</p>
+            </div>
+
+            <div class="card">
+              <h2>My Contribution</h2>
+              <h3>Interactive Visualisations</h3>
+              <ul class="doc-list">
+                <li>Built animated card-movement viewer with playback controls</li>
+                <li>Built grid-based visualisation showing arrangement evolution by move</li>
+                <li>Added analysis-specific filtering across participant, condition, and outcome views</li>
+                <li>Added separate participant and trial dropdowns for repeated-attempt analysis</li>
+                <li>Added retry and success-recovery progression views by participant</li>
+                <li>Added chronological trial labels with messiness score context</li>
+                <li>Added move-level highlighting and trial detail panels</li>
+              </ul>
+              <h3>Quantitative Analysis</h3>
+              <ul class="doc-list">
+                <li>Calculated messiness scores for all trials</li>
+                <li>Compared success and failure groups statistically</li>
+                <li>Analysed learning trajectories and adaptation behaviour</li>
+                <li>Measured blank-card impact on outcomes</li>
+                <li>Produced comparative visuals of behavioural strategies</li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <h2>How to Use the Interactive Tools</h2>
+              <ol class="doc-list">
+                <li>Click the <strong>Animations</strong> tab above to open the viewer</li>
+                <li>Select an analysis type (clean success, failed messy, all successful, all failed, blank-card impact, participant progression)</li>
+                <li>In participant progression, choose a participant first, then choose one of that participant's trials from the second dropdown</li>
+                <li>Watch move-by-move placement animations and inspect final board states</li>
+                <li>Review trials in chronological order (Trial #1, Trial #2, etc.) with messiness values</li>
+                <li>Click <strong>Try Yourself (Beta)</strong> tab to complete your own trial and compare with participants</li>
+              </ol>
+              <h3>Legend</h3>
+              <ul class="doc-list">
+                <li>Gold glow = latest move</li>
+                <li>Grid coordinates = exact 0&ndash;7 positions</li>
+                <li>Move counter = step progression</li>
+                <li>Trial panel = outcome, condition, trial order, and messiness metadata</li>
+                <li>Progression tags = RETRY or SUCCESS RECOVERY</li>
+              </ul>
+            </div>
+
+            <div class="card">
+              <h2>Statistical Notes</h2>
+              <p>Sample: <strong>N = 229 trials</strong> &mdash; Overall success rate: <strong>46.7%</strong> (107/229)</p>
+              <table class="doc-table">
+                <thead><tr><th>Test</th><th>Result</th></tr></thead>
+                <tbody>
+                  <tr><td>Messiness deterioration</td><td>t(227) = 2.67, p = 0.0085</td></tr>
+                  <tr><td>Blank card effect</td><td>chi-square, p &lt; 0.01</td></tr>
+                  <tr><td>Organisation categories</td><td>F(2,226) = 42.1, p &lt; 0.001</td></tr>
+                </tbody>
+              </table>
+              <table class="doc-table" style="margin-top:10px">
+                <thead><tr><th>Effect</th><th>Size</th></tr></thead>
+                <tbody>
+                  <tr><td>Messiness on success</td><td>Cohen's d = 1.24 (large)</td></tr>
+                  <tr><td>Blank-card usage</td><td>Cramer's V = 0.38 (medium-large)</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="card">
+              <h2>Practical Implications</h2>
+              <p>Findings indicate that successful problem-solving in spatial tasks depends more on sustained organisation than on effort alone.</p>
+              <ul class="doc-list">
+                <li>Training should emphasise organisational strategy, not just repetition</li>
+                <li>Flexible tools (like blank cards) can materially improve outcomes</li>
+                <li>Early intervention matters because strategy recovery is rare</li>
+                <li>Messiness can act as an early warning signal of struggle</li>
+              </ul>
+            </div>
+
+          </div>
         </section>
 
-        <section class="content-grid">
-            <div class="card table-wrap">
-                <div id="grid" class="grid"></div>
-            </div>
-            <div class="stack">
-                <div class="card">
-                    <h3>Trial Details</h3>
-                    <div id="trialInfo" class="muted">Loading...</div>
+        <!-- â”€â”€ ANIMATIONS PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <section id="panel-animations" class="page-panel">
+
+                    <label for="analysisSelect">Analysis Type</label>
+                <select id="analysisSelect"></select>
+                <p id="analysisExplanation" class="muted"></p>
+
+                <label for="trialSelect">Trial</label>
+                <div id="participantSelectWrap" style="display:none">
+                    <label for="participantSelect">Participant</label>
+                    <select id="participantSelect"></select>
                 </div>
-                <div class="card">
-                    <h3>Legend</h3>
-                    <p class="muted">
-                        Gold border: current move<br />
-                        Gray card: blank card in merged timeline<br />
-                        8x8 grid coordinates: rows/cols 0..7<br />
-                        <span style="color:#3b82f6;font-weight:600">Blue border</span>: early move (Analysis 4)<br />
-                        <span style="color:#f97316;font-weight:600">Orange border</span>: late move (Analysis 4)
-                    </p>
+                <select id="trialSelect"></select>
+
+                <div class="outcome-filter" id="outcomeFilter"></div>
+
+                <div class="trial-picker-row">
+                    <button id="openPickerBtn" type="button">Choose Trials&hellip;</button>
                 </div>
+
+                <div class="buttons">
+                    <button id="resetBtn" type="button">Reset</button>
+                    <button id="prevBtn" type="button">Prev</button>
+                    <button id="playBtn" type="button" class="primary">Play</button>
+                    <button id="nextBtn" type="button">Next</button>
+                </div>
+
+                <label for="speedRange">Speed: <span id="speedLabel">1.2x</span></label>
+                <input id="speedRange" type="range" min="150" max="2000" value="800" />
+                <p id="moveCounter" class="counter">Move 0 / 0</p>
+            </section>
+
+            <section class="content-grid">
+                <div class="card table-wrap">
+                    <div id="grid" class="grid"></div>
+                </div>
+                <div class="stack">
+                    <div class="card">
+                        <h3>Trial Details</h3>
+                        <div id="trialInfo" class="muted">Loading&hellip;</div>
+                    </div>
+                    <div class="card">
+                        <h3>Legend</h3>
+                        <p class="muted">
+                            Gold glow: current move<br />
+                            Gray card: blank card<br />
+                            8&times;8 grid coordinates: rows/cols 0&ndash;7<br />
+                            <span style="color:#3b82f6;font-weight:600">Blue border</span>: early move (Analysis 4)<br />
+                            <span style="color:#f97316;font-weight:600">Orange border</span>: late move (Analysis 4)
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+        </section>
+
+        <!-- â”€â”€ STATISTICS PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <section id="panel-statistics" class="page-panel">
+            <section class="charts">
+                <div class="card"><h3>Trial Summary</h3><div id="summaryChart"></div></div>
+                <div class="card"><h3>Success Rate by Condition</h3><div id="conditionChart"></div></div>
+                <div class="card"><h3>Messiness Deterioration</h3><div id="messinessChart"></div></div>
+                <div class="card"><h3>Move Count Distribution</h3><div id="moveDistChart"></div></div>
+                <div class="card"><h3>Blank Card Advantage</h3><div id="blankChart"></div></div>
+                <div class="card"><h3>Messiness Distribution by Outcome</h3><div id="messinessBoxChart"></div></div>
+            </section>
+        </section>
+
+        <!-- â”€â”€ TRY YOURSELF PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+        <section id="panel-playground" class="page-panel">
+            <div class="playground-wrap">
+                <iframe
+                    id="playgroundFrame"
+                    src="/play"
+                    title="Try It Yourself (Beta)"
+                    allowfullscreen
+                ></iframe>
             </div>
-        </section>
-
-        <section class="charts">
-            <div class="card"><h3>Trial Summary</h3><div id="summaryChart"></div></div>
-            <div class="card"><h3>Success Rate by Condition</h3><div id="conditionChart"></div></div>
-            <div class="card"><h3>Messiness Deterioration</h3><div id="messinessChart"></div></div>
-            <div class="card"><h3>Move Count Distribution</h3><div id="moveDistChart"></div></div>
-            <div class="card"><h3>Blank Card Advantage</h3><div id="blankChart"></div></div>
-            <div class="card"><h3>Messiness Distribution by Outcome</h3><div id="messinessBoxChart"></div></div>
-        </section>
-
-        <!-- Project Write-Up -->
-        <section class="project-doc">
-
-          <div class="card">
-            <h2>Project Overview</h2>
-            <p>This project investigates how people organize information spatially and the cognitive strategies they employ when solving card arrangement tasks.</p>
-            <p>Participants used an interactive 8×8 grid to arrange playing cards (Kings, Queens, Jacks, and in some conditions, blank cards), while every movement was tracked.</p>
-            <p><strong>Core question:</strong> what separates successful problem-solvers from those who struggle?</p>
-            <p>The live viewer supports participant-level progression analysis, including separate participant/trial selection for repeated attempts, retry-to-success tracing, and chronological trial inspection with messiness context.</p>
-          </div>
-
-          <div class="card">
-            <h2>What We Measured</h2>
-            <p>We analysed <strong>229 trials</strong> across four task conditions:</p>
-            <table class="doc-table">
-              <thead><tr><th>Condition</th><th>Description</th><th>Trials</th></tr></thead>
-              <tbody>
-                <tr><td>KQ</td><td>King and Queen only</td><td>56</td></tr>
-                <tr><td>KQB</td><td>King, Queen, and Blank</td><td>62</td></tr>
-                <tr><td>KQJ</td><td>King, Queen, and Jack</td><td>52</td></tr>
-                <tr><td>KQJB</td><td>King, Queen, Jack, and Blank</td><td>59</td></tr>
-              </tbody>
-            </table>
-            <p>For each trial we captured: every card placement (position and sequence), total moves, spatial organization pattern, success or failure outcome, and strategic tool usage (blank cards).</p>
-          </div>
-
-          <div class="card">
-            <h2>Nine Analysis Views</h2>
-            <p>The explorer is organised into <strong>9 analysis views</strong>, each designed for a different decision question:</p>
-            <ol class="doc-list">
-              <li><strong>Successful Clean (15+ moves)</strong> — long successful sequences with organised play</li>
-              <li><strong>Failed Messy (&lt;15 moves)</strong> — short unsuccessful attempts with unstable organisation</li>
-              <li><strong>All Successful</strong> — full successful pool across conditions</li>
-              <li><strong>All Failed</strong> — full failed pool for failure-pattern comparison</li>
-              <li><strong>Blank-Card Impact</strong> — compares outcomes and behaviour with vs without blank-card usage</li>
-              <li><strong>Retry &amp; Success Recovery Progression</strong> — participant-level repeated attempts with separate participant/trial selection</li>
-              <li><strong>Condition Focus (KQ/KQB/KQJ/KQJB)</strong> — behaviour split by rule-set complexity</li>
-              <li><strong>Move-Efficiency Patterns</strong> — compares low-move vs high-move completion strategies</li>
-              <li><strong>Messiness &amp; Outcome Relationship</strong> — links spatial organisation quality to success probability</li>
-            </ol>
-            <p class="muted">Together, these views let you move from broad cohort patterns to participant-level progression without leaving the same interface.</p>
-          </div>
-
-          <div class="card">
-            <h2>Key Findings</h2>
-
-            <h3>1) Organisation Matters More Than Effort</h3>
-            <ul class="doc-list">
-              <li>Successful trials: average messiness deterioration = <strong>+0.21 per move</strong></li>
-              <li>Failed trials: average messiness deterioration = <strong>+0.34 per move</strong></li>
-              <li>Failures showed a <strong>63% faster organisational decline</strong> <em>(p = 0.0085)</em></li>
-            </ul>
-            <p class="muted">Interpretation: success was not about trying harder — it was about staying systematic as complexity increased.</p>
-
-            <h3>2) Blank Card Advantage</h3>
-            <p>When blank cards were available (KQB, KQJB), using them improved outcomes substantially:</p>
-            <table class="doc-table">
-              <thead><tr><th>Group</th><th>Success Rate</th></tr></thead>
-              <tbody>
-                <tr><td>KQB with blank</td><td>81.1% (30/37)</td></tr>
-                <tr><td>KQB without blank</td><td>52.0% (13/25)</td></tr>
-                <tr><td>KQJB with blank</td><td>60.9% (14/23)</td></tr>
-                <tr><td>KQJB without blank</td><td>25.0% (9/36)</td></tr>
-              </tbody>
-            </table>
-            <p>Overall uplift: <strong>+29% to +36%</strong> in success rates <em>(chi-square, p &lt; 0.01)</em>.</p>
-
-            <h3>3) Learning and Adaptation</h3>
-            <p>Only <strong>14%</strong> of participants who failed initially recovered on later attempts.</p>
-            <p class="muted">Early strategy selection was critical, and self-correction after failure was uncommon.</p>
-
-            <h3>4) Messiness as a Predictor</h3>
-            <p>Messiness score: <code>messiness = (1/n) &times; &sum;( &radic;((x&#8342;&minus;x&#772;)&sup2; + (y&#8342;&minus;y&#772;)&sup2;) )</code></p>
-            <ul class="doc-list">
-              <li>Clean trials <em>(messiness &lt; 2.0)</em>: <strong>68%</strong> success</li>
-              <li>Messy trials <em>(messiness &gt; 3.5)</em>: <strong>18%</strong> success</li>
-            </ul>
-            <p class="muted">Spatial organisation was a strong predictor of performance.</p>
-          </div>
-
-          <div class="card">
-            <h2>My Contribution</h2>
-            <h3>Interactive Visualisations</h3>
-            <ul class="doc-list">
-              <li>Built animated card-movement viewer with playback controls</li>
-              <li>Built grid-based visualisation showing arrangement evolution by move</li>
-              <li>Added analysis-specific filtering across participant, condition, and outcome views</li>
-              <li>Added separate participant and trial dropdowns for repeated-attempt analysis</li>
-              <li>Added retry and success-recovery progression views by participant</li>
-              <li>Added chronological trial labels with messiness score context</li>
-              <li>Added move-level highlighting and trial detail panels</li>
-            </ul>
-            <h3>Quantitative Analysis</h3>
-            <ul class="doc-list">
-              <li>Calculated messiness scores for all trials</li>
-              <li>Compared success and failure groups statistically</li>
-              <li>Analysed learning trajectories and adaptation behaviour</li>
-              <li>Measured blank-card impact on outcomes</li>
-              <li>Produced comparative visuals of behavioural strategies</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h2>How to Use the Interactive Tools</h2>
-            <ol class="doc-list">
-              <li>Select an analysis type (clean success, failed messy, all successful, all failed, blank-card impact, participant progression)</li>
-              <li>In participant progression, choose a participant first, then choose one of that participant's trials from the second dropdown</li>
-              <li>Watch move-by-move placement animations and inspect final board states</li>
-              <li>Review trials in chronological order (Trial #1, Trial #2, etc.) with messiness values</li>
-              <li>Compare retry sequences and success-recovery sequences for the same participant</li>
-              <li>Use condition/outcome-specific analyses to compare strategy patterns across groups</li>
-            </ol>
-            <h3>Legend</h3>
-            <ul class="doc-list">
-              <li>Gold highlight = latest move</li>
-              <li>Grid coordinates = exact 0–7 positions</li>
-              <li>Move counter = step progression</li>
-              <li>Trial panel = outcome, condition, trial order, and messiness metadata</li>
-              <li>Progression tags = RETRY or SUCCESS RECOVERY</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h2>Statistical Notes</h2>
-            <p>Sample: <strong>N = 229 trials</strong> &mdash; Overall success rate: <strong>46.7%</strong> (107/229)</p>
-            <table class="doc-table">
-              <thead><tr><th>Test</th><th>Result</th></tr></thead>
-              <tbody>
-                <tr><td>Messiness deterioration</td><td>t(227) = 2.67, p = 0.0085</td></tr>
-                <tr><td>Blank card effect</td><td>chi-square, p &lt; 0.01</td></tr>
-                <tr><td>Organisation categories</td><td>F(2,226) = 42.1, p &lt; 0.001</td></tr>
-              </tbody>
-            </table>
-            <table class="doc-table" style="margin-top:10px">
-              <thead><tr><th>Effect</th><th>Size</th></tr></thead>
-              <tbody>
-                <tr><td>Messiness on success</td><td>Cohen's d = 1.24 (large)</td></tr>
-                <tr><td>Blank-card usage</td><td>Cramer's V = 0.38 (medium-large)</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="card">
-            <h2>Practical Implications</h2>
-            <p>Findings indicate that successful problem-solving in spatial tasks depends more on sustained organisation than on effort alone.</p>
-            <ul class="doc-list">
-              <li>Training should emphasise organisational strategy, not just repetition</li>
-              <li>Flexible tools (like blank cards) can materially improve outcomes</li>
-              <li>Early intervention matters because strategy recovery is rare</li>
-              <li>Messiness can act as an early warning signal of struggle</li>
-            </ul>
-          </div>
-
         </section>
 
     </div>
 
-    <!-- Trial Picker Modal -->
+    <!-- Trial Picker Modal (outside panels so it works from Animations tab) -->
     <div id="trialPickerOverlay" class="modal-overlay hidden">
         <div class="modal-box">
             <div class="modal-header">
@@ -261,6 +291,34 @@
         window.CARDS_CONFIG = {
             parentOrigin: "{{ parent_origin }}"
         };
+
+        // â”€â”€ Page-level tab switching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        (function () {
+            const tabs   = document.querySelectorAll('.page-tab');
+            const panels = document.querySelectorAll('.page-panel');
+
+            function showPanel(id) {
+                panels.forEach(function (p) { p.classList.toggle('active', p.id === 'panel-' + id); });
+                tabs.forEach(function (t)   { t.classList.toggle('active', t.dataset.panel === id); });
+                // Reflow Plotly charts once visible so they render at correct size
+                if (id === 'statistics') {
+                    setTimeout(function () {
+                        document.querySelectorAll('[id$="Chart"]').forEach(function (el) {
+                            if (el.children.length) { Plotly.relayout(el, {}); }
+                        });
+                    }, 60);
+                }
+            }
+
+            tabs.forEach(function (tab) {
+                tab.addEventListener('click', function () { showPanel(tab.dataset.panel); });
+            });
+
+            // Overview "Open â€¦" buttons that jump to another tab
+            document.querySelectorAll('.page-tab-link').forEach(function (btn) {
+                btn.addEventListener('click', function () { showPanel(btn.dataset.goto); });
+            });
+        })();
     </script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
