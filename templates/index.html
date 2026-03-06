@@ -16,6 +16,9 @@
         <header class="header">
             <h1>Interactive Card Sorting Analysis</h1>
             <p>Spatial organisation, strategy quality, and blank-card usage &mdash; 229 trials, 9 analysis types.</p>
+            <p class="research-question" style="font-style:italic; margin-top:8px;">
+                <strong>Research question:</strong> Can we predict card-sorting task success by analysing <strong>how</strong> people work (behaviour patterns) rather than just their final outcome?
+            </p>
         </header>
 
         <section class="stats" id="stats"></section>
@@ -315,6 +318,18 @@
                                 if (el.children.length) { Plotly.relayout(el, {}); }
                             });
                         }, 60);
+                    }
+                }
+                if (id === 'animations') {
+                    if (!window.animationsInitialized) {
+                        window.animationsInitialized = true;
+                        // render the animation viewer once the tab is active
+                        renderAnalysisSelect();
+                        renderOutcomeFilter();
+                        renderParticipantSelect();
+                        renderTrialSelect();
+                        renderTrial();
+                        bindControls();
                     }
                 }
             }

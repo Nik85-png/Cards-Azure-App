@@ -990,12 +990,7 @@ async function init() {
     setupEmbedMode();
     await loadData();
     renderStats();
-    renderAnalysisSelect();
-    renderOutcomeFilter();
-    renderParticipantSelect();
-    renderTrialSelect();
-    renderTrial();
-    bindControls();
+    // animation viewer is initialised lazily when user opens the 'Animations' tab
 }
 
 init();
