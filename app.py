@@ -324,7 +324,8 @@ def _build_trial_comparisons(user_feature, baseline_features):
         )
 
     sorted_by_score = sorted(enriched, key=lambda x: x["performance_score"], reverse=True)
-    better = [t for t in sorted_by_score if t["performance_score"] > user_score][:10]
+    # only consider baseline trials with at least 7 moves (lighter/noise trials filter)
+    better = [t for t in sorted_by_score if t["performance_score"] > user_score and t.get("move_count", 0) >= 7][:10]
     nearest = sorted(enriched, key=lambda x: x["distance"])[:5]
     rank = sum(1 for t in sorted_by_score if t["performance_score"] > user_score) + 1
     total = len(sorted_by_score) + 1
