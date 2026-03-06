@@ -250,7 +250,6 @@ function renderResults() {
         : '<li>No better baseline trials for this condition.</li>';
 
     $('resultsContent').innerHTML = `
-        <p><em><strong>Research question:</strong> Can we predict card‑sorting task success by analysing <strong>how</strong> people work (behaviour patterns) rather than just their final outcome?</em></p>
         <p><strong>Trial Outcome:</strong> <span class="${outcomeClass}">${outcomeText}</span> (${Math.round((r.success_probability || 0) * 100)}% success likelihood, confidence ${Math.round((r.outcome_confidence || 0) * 100)}%)</p>
         <p><strong>Condition:</strong> ${r.condition}</p>
         <p><strong>Move Count:</strong> ${r.move_count}</p>
