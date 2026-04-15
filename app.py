@@ -166,8 +166,8 @@ ANALYSIS_DEFINITIONS = {
         "explanation": "First moves that shape final outcomes.",
     },
     6: {
-        "title": "Retry and Recovery Patterns",
-        "explanation": "All trials included, grouped around participant retry and success recovery behavior.",
+        "title": "Repeated Attempts and Success Recovery",
+        "explanation": "Only participants with multiple usable trials are shown, so retry/progression comparisons are meaningful.",
     },
     7: {
         "title": "Extreme Cases (Cleanest vs Messiest)",
@@ -257,6 +257,16 @@ def _group_by_participant(trials):
     return groups
 
 
+def _repeated_participant_trials(trials):
+    groups = _group_by_participant(trials)
+    repeated = []
+    for participant in sorted(groups, key=_participant_sort_key):
+        group = groups[participant]
+        if len(group) > 1:
+            repeated.extend(group)
+    return repeated
+
+
 def _recovery_score(trials):
     failed = [t for t in trials if t.get("outcome") != "success"]
     success = [t for t in trials if t.get("outcome") == "success"]
@@ -339,7 +349,7 @@ def _derive_analysis(raw, analysis_id):
             for t in valid
             if len(t.get("moves", [])) >= 5
         ][:32],
-        6: _sort_trials_for_recovery(all_raw),
+        6: _sort_trials_for_recovery(_repeated_participant_trials(all_raw)),
         7: (lambda sorted_trials: sorted_trials[:6] + sorted_trials[-6:])(
             sorted(valid, key=lambda t: _numeric(t.get("messiness_score"), _messiness_from_moves(t.get("moves") or [])))
         ),

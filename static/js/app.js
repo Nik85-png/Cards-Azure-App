@@ -2,9 +2,9 @@ const analysisDefinitions = {
     1: { title: 'Successful Clean Patterns (Many Moves)', explanation: 'Successful participants with many exploratory moves while keeping structure.' },
     2: { title: 'Failed Messy Patterns (Few Moves)', explanation: 'Failed trials where organization breaks down early.' },
     3: { title: 'All Successful Trials', explanation: 'All success outcomes to compare multiple winning paths.' },
-    4: { title: 'In-Trial Progression (Early vs Late)', explanation: 'Grid highlights move phases: blue border = early (first ⅓ of moves), orange border = late (last ⅓). All trials are included — use the outcome filter or "Choose Trials" to narrow down.' },
+4: { title: 'In-Trial Progression (Early vs Late)', explanation: 'Grid highlights move phases: blue border = early (first third of moves), orange border = late (last third). All trials are included - use the outcome filter or "Choose Trials" to narrow down.' },
     5: { title: 'Opening Strategies (First 5 Moves)', explanation: 'First moves that shape final outcomes.' },
-    6: { title: 'Retry and Recovery Patterns', explanation: 'All trials included. Use "Choose Trials" to hand-pick participants across all outcomes and compare their attempts. Filter by outcome type to focus on recovery from failure.' },
+    6: { title: 'Repeated Attempts and Success Recovery', explanation: 'Only participants with multiple usable trials are shown, so retry/progression comparisons are meaningful. Mixed participants have both failed and successful attempts.' },
     7: { title: 'Extreme Cases (Cleanest vs Messiest)', explanation: 'Best and worst spatial organization cases.' },
     8: { title: 'Speed Comparison (Quick vs Slow Solvers)', explanation: 'Efficiency versus exploration in successful runs.' },
     9: { title: 'Card Repetition Patterns', explanation: 'Focused repetition versus broad exploration.' }
@@ -51,7 +51,7 @@ async function loadData() {
 function renderStats() {
     const stats = state.data?.statistics || {};
     $('stats').innerHTML = [
-        ['Total Trials', Number(stats.total_trials || 229)],
+        ['Total Trials', Number(stats.total_trials || 766)],
         ['Success Rate', `${Number(stats.success_rate || 46.7).toFixed(1)}%`],
         ['Success With Blank', `${Number(stats.blank_card_success_rate || 73.3).toFixed(1)}%`],
         ['Success Without Blank', `${Number(stats.no_blank_success_rate || 37.3).toFixed(1)}%`]
@@ -116,7 +116,17 @@ function renderTrialSelect() {
         const condition = trial.condition || 'N/A';
         const moves = Number(trial.move_count ?? (trial.moves || []).length);
         const blankTag = (trial.blank_card_count || 0) > 0 || hasBlankInFinal(trial) ? ' [blank]' : '';
-        const recoveryTag = currentAnalysis().id === 6 ? ` | ${trial.outcome === 'success' ? 'SUCCESS RECOVERY' : 'FAILED ATTEMPT'}` : '';
+        let recoveryTag = '';
+        if (currentAnalysis().id === 6) {
+            const group = (currentAnalysis().trials || []).filter((t) => String(t.participant || 'N/A') === String(participant));
+            const outcomes = new Set(group.map((t) => t.outcome));
+            const hasRecovery = outcomes.has('success') && outcomes.has('fail');
+            if (trial.outcome === 'success') {
+                recoveryTag = ` | ${hasRecovery ? 'SUCCESS RECOVERY' : 'SUCCESSFUL REPEAT'}`;
+            } else {
+                recoveryTag = ' | FAILED ATTEMPT';
+            }
+        }
         const trialNumTag =
             currentAnalysis().id === 6 && Number.isFinite(Number(trial.trial_number))
                 ? ` | Trial #${Number(trial.trial_number) + 1}`
@@ -164,7 +174,7 @@ function renderParticipantSelect() {
     }
 
     const meta = getRecoveryParticipantMeta(pool);
-    const options = [{ value: 'all', label: `All Participants (${meta.length})` }].concat(
+    const options = [{ value: 'all', label: `All Repeat Participants (${meta.length})` }].concat(
         meta.map((m, idx) => {
             const pairTag = m.hasBoth ? ' mixed' : '';
             return {
@@ -259,6 +269,10 @@ function repeatParticipants(trials) {
     return Array.from(byP.entries())
         .filter(([, list]) => list.length > 1)
         .sort((a, b) => b[1].length - a[1].length);
+}
+
+function repeatedParticipantTrials(trials) {
+    return repeatParticipants(trials).flatMap(([, list]) => list);
 }
 
 function messiness(trial) {
@@ -413,8 +427,8 @@ function buildAnalysisData(data) {
             .filter((t) => t.moves.length >= 5)
             .slice(0, 32)
             .map((t) => ({ ...t, moves: t.moves.slice(0, 5), move_count: 5 })),
-        // Analysis 6: all trials (fail first so failed → success recovery is front of list)
-        6: sortTrialsForRecovery(nonEmptyRaw),
+        // Analysis 6: repeated participants only; single trials cannot show retry/progression.
+        6: sortTrialsForRecovery(repeatedParticipantTrials(nonEmptyRaw)),
         7: (() => {
             const sorted = [...valid].sort((a, b) => messiness(a) - messiness(b));
             return [...sorted.slice(0, 6), ...sorted.slice(-6)];
@@ -766,7 +780,7 @@ function renderCharts() {
 // Expose for lazy rendering from the page-tab switcher in index.html
 window.renderCharts = renderCharts;
 
-// ── Messiness thresholds for clean/messy filter ─────────────────────────────
+// Messiness thresholds for clean/messy filter
 function messinessThresholds() {
     const all = state.allValidTrials || [];
     const scores = all.map((t) => messiness(t)).filter(Number.isFinite).sort((a, b) => a - b);
@@ -777,7 +791,7 @@ function messinessThresholds() {
     };
 }
 
-// ── Filtered trial list shown in dropdown ────────────────────────────────────
+// Filtered trial list shown in dropdown
 function getDisplayTrials() {
     let pool;
     if (state.customPickedKeys) {
@@ -786,7 +800,6 @@ function getDisplayTrials() {
         pool = currentAnalysis().trials || [];
     }
     if (currentAnalysis().id === 6) {
-        pool = sortTrialsByTrialNumber(pool);
         if (state.selectedParticipant !== 'all') {
             pool = pool.filter((t) => String(t.participant || 'N/A') === state.selectedParticipant);
             pool = sortTrialsByTrialNumber(pool);
@@ -801,7 +814,7 @@ function getDisplayTrials() {
     return pool;
 }
 
-// ── Outcome filter bar ───────────────────────────────────────────────────────
+// Outcome filter bar
 function renderOutcomeFilter() {
     const el = $('outcomeFilter');
     if (!el) return;
@@ -845,7 +858,7 @@ function renderOutcomeFilter() {
     });
 }
 
-// ── Trial picker modal ───────────────────────────────────────────────────────
+// Trial picker modal
 let _pickerFilter = 'all';
 let _pickerSearch = '';
 let _pickerChecked = new Set();
