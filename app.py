@@ -159,7 +159,7 @@ ANALYSIS_DEFINITIONS = {
     },
     4: {
         "title": "In-Trial Progression (Early vs Late)",
-        "explanation": "Grid highlights move phases: early moves versus late moves.",
+        "explanation": "Shows the strongest within-trial shifts: trials that became more organized versus trials that became less organized.",
     },
     5: {
         "title": "Opening Strategies (First 5 Moves)",
@@ -170,12 +170,12 @@ ANALYSIS_DEFINITIONS = {
         "explanation": "Only participants with multiple usable trials are shown, so retry/progression comparisons are meaningful.",
     },
     7: {
-        "title": "Extreme Cases (Cleanest vs Messiest)",
-        "explanation": "Best and worst spatial organization cases.",
+        "title": "Extreme Cases by Outcome",
+        "explanation": "Cleanest and messiest successful trials plus cleanest and messiest failed trials.",
     },
     8: {
         "title": "Speed Comparison (Quick vs Slow Solvers)",
-        "explanation": "Efficiency versus exploration in successful runs.",
+        "explanation": "Quickest successful solvers compared with slowest successful solvers.",
     },
     9: {
         "title": "Card Repetition Patterns",
@@ -326,6 +326,48 @@ def _sort_trials_for_recovery(trials):
     return ordered
 
 
+def _with_meta(trial, **meta):
+    enriched = copy.deepcopy(trial)
+    enriched.update(meta)
+    return enriched
+
+
+def _progression_cases(trials, limit_per_side=12):
+    enriched = [(t, _progression_delta(t)) for t in trials if len(t.get("moves") or []) >= 6]
+    improved = sorted(
+        [(t, delta) for t, delta in enriched if delta < 0],
+        key=lambda item: item[1],
+    )[:limit_per_side]
+    deteriorated = sorted(
+        [(t, delta) for t, delta in enriched if delta > 0],
+        key=lambda item: item[1],
+        reverse=True,
+    )[:limit_per_side]
+    return [
+        _with_meta(t, progression_label="Became more organized", progression_delta=round(delta, 3))
+        for t, delta in improved
+    ] + [
+        _with_meta(t, progression_label="Became less organized", progression_delta=round(delta, 3))
+        for t, delta in deteriorated
+    ]
+
+
+def _extreme_cases_by_outcome(success_trials, failed_trials, limit_per_group=6):
+    cases = []
+    for label, pool in (("successful", success_trials), ("failed", failed_trials)):
+        sorted_pool = sorted(pool, key=lambda t: _numeric(t.get("messiness_score"), _messiness_from_moves(t.get("moves") or [])))
+        cases.extend(_with_meta(t, extreme_label=f"Cleanest {label}") for t in sorted_pool[:limit_per_group])
+        cases.extend(_with_meta(t, extreme_label=f"Messiest {label}") for t in sorted_pool[-limit_per_group:])
+    return cases
+
+
+def _speed_cases(success_trials, limit_per_side=8):
+    sorted_success = sorted(success_trials, key=lambda t: int(t.get("move_count") or 0))
+    quickest = [_with_meta(t, speed_label="Quick successful solver") for t in sorted_success[:limit_per_side]]
+    slowest = [_with_meta(t, speed_label="Slow successful solver") for t in sorted_success[-limit_per_side:]]
+    return quickest + slowest
+
+
 def _derive_analysis(raw, analysis_id):
     analyses = raw.get("analysis_types", [])
     by_id = {a.get("id"): a for a in analyses}
@@ -343,19 +385,15 @@ def _derive_analysis(raw, analysis_id):
         1: [t for t in success if int(t.get("move_count") or 0) >= 15][:24],
         2: [t for t in failed if int(t.get("move_count") or 0) < 15][:24],
         3: success[:32],
-        4: sorted(valid, key=lambda t: abs(_progression_delta(t)), reverse=True),
+        4: _progression_cases(valid),
         5: [
             {**t, "moves": t.get("moves", [])[:5], "move_count": 5}
             for t in valid
             if len(t.get("moves", [])) >= 5
         ][:32],
         6: _sort_trials_for_recovery(_repeated_participant_trials(all_raw)),
-        7: (lambda sorted_trials: sorted_trials[:6] + sorted_trials[-6:])(
-            sorted(valid, key=lambda t: _numeric(t.get("messiness_score"), _messiness_from_moves(t.get("moves") or [])))
-        ),
-        8: (lambda sorted_success: sorted_success[:8] + sorted_success[-8:])(
-            sorted(success, key=lambda t: int(t.get("move_count") or 0))
-        ),
+        7: _extreme_cases_by_outcome(success, failed),
+        8: _speed_cases(success),
         9: (lambda sorted_trials: sorted_trials[:8] + sorted_trials[-8:])(
             sorted(valid, key=_repetition_ratio, reverse=True)
         ),

@@ -2,11 +2,11 @@ const analysisDefinitions = {
     1: { title: 'Successful Clean Patterns (Many Moves)', explanation: 'Successful participants with many exploratory moves while keeping structure.' },
     2: { title: 'Failed Messy Patterns (Few Moves)', explanation: 'Failed trials where organization breaks down early.' },
     3: { title: 'All Successful Trials', explanation: 'All success outcomes to compare multiple winning paths.' },
-4: { title: 'In-Trial Progression (Early vs Late)', explanation: 'Grid highlights move phases: blue border = early (first third of moves), orange border = late (last third). All trials are included - use the outcome filter or "Choose Trials" to narrow down.' },
+    4: { title: 'In-Trial Progression (Early vs Late)', explanation: 'Shows the strongest within-trial shifts: trials that became more organized versus trials that became less organized. Blue border = early moves, orange border = late moves.' },
     5: { title: 'Opening Strategies (First 5 Moves)', explanation: 'First moves that shape final outcomes.' },
     6: { title: 'Repeated Attempts and Success Recovery', explanation: 'Only participants with multiple usable trials are shown, so retry/progression comparisons are meaningful. Mixed participants have both failed and successful attempts.' },
-    7: { title: 'Extreme Cases (Cleanest vs Messiest)', explanation: 'Best and worst spatial organization cases.' },
-    8: { title: 'Speed Comparison (Quick vs Slow Solvers)', explanation: 'Efficiency versus exploration in successful runs.' },
+    7: { title: 'Extreme Cases by Outcome', explanation: 'Cleanest and messiest successful trials plus cleanest and messiest failed trials.' },
+    8: { title: 'Speed Comparison (Quick vs Slow Solvers)', explanation: 'Quickest successful solvers compared with slowest successful solvers.' },
     9: { title: 'Card Repetition Patterns', explanation: 'Focused repetition versus broad exploration.' }
 };
 
@@ -135,9 +135,14 @@ function renderTrialSelect() {
             currentAnalysis().id === 6
                 ? ` | mess ${typeof trial.messiness_score === 'number' ? trial.messiness_score.toFixed(2) : 'N/A'}`
                 : '';
+        const progressionTag = currentAnalysis().id === 4
+            ? ` | ${trial.progression_label || 'Progression case'}${typeof trial.progression_delta === 'number' ? ` (${trial.progression_delta > 0 ? '+' : ''}${trial.progression_delta.toFixed(2)})` : ''}`
+            : '';
+        const extremeTag = currentAnalysis().id === 7 && trial.extreme_label ? ` | ${trial.extreme_label}` : '';
+        const speedTag = currentAnalysis().id === 8 && trial.speed_label ? ` | ${trial.speed_label}` : '';
         const opt = document.createElement('option');
         opt.value = String(idx);
-        opt.textContent = `Trial ${idx + 1} [P${participant}] ${outcome} | ${condition}${trialNumTag} | ${moves} moves${messinessTag}${blankTag}${recoveryTag}`;
+        opt.textContent = `Trial ${idx + 1} [P${participant}] ${outcome} | ${condition}${trialNumTag} | ${moves} moves${messinessTag}${progressionTag}${extremeTag}${speedTag}${blankTag}${recoveryTag}`;
         select.appendChild(opt);
     });
     select.value = String(state.currentTrialIdx);
@@ -388,6 +393,57 @@ function sortTrialsForRecovery(trials) {
     return ordered;
 }
 
+function withTrialMeta(trial, meta) {
+    return { ...trial, ...meta };
+}
+
+function progressionCases(trials, limitPerSide = 12) {
+    const enriched = trials
+        .filter((t) => (t.moves || []).length >= 6)
+        .map((t) => ({ trial: t, delta: progressionDelta(t) }));
+    const improved = enriched
+        .filter(({ delta }) => delta < 0)
+        .sort((a, b) => a.delta - b.delta)
+        .slice(0, limitPerSide)
+        .map(({ trial, delta }) => withTrialMeta(trial, {
+            progression_label: 'Became more organized',
+            progression_delta: Number(delta.toFixed(3))
+        }));
+    const deteriorated = enriched
+        .filter(({ delta }) => delta > 0)
+        .sort((a, b) => b.delta - a.delta)
+        .slice(0, limitPerSide)
+        .map(({ trial, delta }) => withTrialMeta(trial, {
+            progression_label: 'Became less organized',
+            progression_delta: Number(delta.toFixed(3))
+        }));
+    return improved.concat(deteriorated);
+}
+
+function extremeCasesByOutcome(success, fail, limitPerGroup = 6) {
+    const cases = [];
+    [
+        ['successful', success],
+        ['failed', fail]
+    ].forEach(([label, pool]) => {
+        const sorted = [...pool].sort((a, b) => messiness(a) - messiness(b));
+        sorted.slice(0, limitPerGroup).forEach((trial) => {
+            cases.push(withTrialMeta(trial, { extreme_label: `Cleanest ${label}` }));
+        });
+        sorted.slice(-limitPerGroup).forEach((trial) => {
+            cases.push(withTrialMeta(trial, { extreme_label: `Messiest ${label}` }));
+        });
+    });
+    return cases;
+}
+
+function speedCases(success, limitPerSide = 8) {
+    const sorted = [...success].sort((a, b) => a.move_count - b.move_count);
+    return sorted.slice(0, limitPerSide)
+        .map((trial) => withTrialMeta(trial, { speed_label: 'Quick successful solver' }))
+        .concat(sorted.slice(-limitPerSide).map((trial) => withTrialMeta(trial, { speed_label: 'Slow successful solver' })));
+}
+
 function sortTrialsByTrialNumber(trials) {
     return [...trials].sort((a, b) => {
         const at = Number(a?.trial_number);
@@ -421,22 +477,16 @@ function buildAnalysisData(data) {
         1: success.filter((t) => t.move_count >= 15).slice(0, 24),
         2: fail.filter((t) => t.move_count < 15).slice(0, 24),
         3: success.slice(0, 32),
-        // Analysis 4: all valid trials sorted by strongest early-vs-late progression delta
-        4: [...valid].sort((a, b) => Math.abs(progressionDelta(b)) - Math.abs(progressionDelta(a))),
+        // Analysis 4: strongest improved and deteriorated within-trial progression cases.
+        4: progressionCases(valid),
         5: valid
             .filter((t) => t.moves.length >= 5)
             .slice(0, 32)
             .map((t) => ({ ...t, moves: t.moves.slice(0, 5), move_count: 5 })),
         // Analysis 6: repeated participants only; single trials cannot show retry/progression.
         6: sortTrialsForRecovery(repeatedParticipantTrials(nonEmptyRaw)),
-        7: (() => {
-            const sorted = [...valid].sort((a, b) => messiness(a) - messiness(b));
-            return [...sorted.slice(0, 6), ...sorted.slice(-6)];
-        })(),
-        8: (() => {
-            const s = [...success].sort((a, b) => a.move_count - b.move_count);
-            return [...s.slice(0, 8), ...s.slice(-8)];
-        })(),
+        7: extremeCasesByOutcome(success, fail),
+        8: speedCases(success),
         9: (() => {
             const sorted = [...valid].sort((a, b) => repetitionRatio(b) - repetitionRatio(a));
             return [...sorted.slice(0, 8), ...sorted.slice(-8)];
