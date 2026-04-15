@@ -113,34 +113,248 @@ def _is_blank(card):
     return str(card.get("value", "")).upper() == "BLANK"
 
 
-def _merge_trial_blanks(trial):
-    out = copy.deepcopy(trial)
-    moves = list(out.get("moves") or [])
-    final_state = list(out.get("final_state") or [])
-    blank_cards = [card for card in final_state if _is_blank(card)]
-    for card in blank_cards:
-        moves.append(
-            {
-                "row": card.get("row"),
-                "col": card.get("col"),
-                "value": card.get("value", "BLANK"),
-                "suit_symbol": card.get("suit_symbol", "\u25fb"),
-                "color": card.get("color", "#9e9e9e"),
-                "is_blank": True,
-            }
+def _trial_identity_key(trial):
+    trial_number = trial.get("trial_number")
+    if trial_number is not None:
+        return (
+            str(trial.get("participant") or ""),
+            str(trial.get("condition") or ""),
+            str(trial_number),
         )
-    out["moves"] = moves
-    out["move_count"] = len(moves)
-    out["has_blank_cards"] = len(blank_cards) > 0
-    out["blank_card_count"] = len(blank_cards)
-    return out
+
+    moves = list(trial.get("moves") or [])
+    first = moves[0] if moves else {}
+    last = moves[-1] if moves else {}
+    return (
+        str(trial.get("participant") or ""),
+        str(trial.get("condition") or ""),
+        str(trial.get("outcome") or ""),
+        int(trial.get("move_count") or len(moves) or 0),
+        f"{first.get('row')}-{first.get('col')}-{first.get('value')}",
+        f"{last.get('row')}-{last.get('col')}-{last.get('value')}",
+    )
 
 
-def _enhance_data(data):
-    out = copy.deepcopy(data)
-    for analysis in out.get("analysis_types", []):
-        analysis["trials"] = [_merge_trial_blanks(t) for t in analysis.get("trials", [])]
-    return out
+def _dedupe_trials(trials):
+    deduped = {}
+    for trial in trials:
+        deduped[_trial_identity_key(trial)] = trial
+    return list(deduped.values())
+
+
+MIN_VALID_MOVES = 6
+
+ANALYSIS_DEFINITIONS = {
+    1: {
+        "title": "Successful Clean Patterns (Many Moves)",
+        "explanation": "Successful participants with many exploratory moves while keeping structure.",
+    },
+    2: {
+        "title": "Failed Messy Patterns (Few Moves)",
+        "explanation": "Failed trials where organization breaks down early.",
+    },
+    3: {
+        "title": "All Successful Trials",
+        "explanation": "All success outcomes to compare multiple winning paths.",
+    },
+    4: {
+        "title": "In-Trial Progression (Early vs Late)",
+        "explanation": "Grid highlights move phases: early moves versus late moves.",
+    },
+    5: {
+        "title": "Opening Strategies (First 5 Moves)",
+        "explanation": "First moves that shape final outcomes.",
+    },
+    6: {
+        "title": "Retry and Recovery Patterns",
+        "explanation": "All trials included, grouped around participant retry and success recovery behavior.",
+    },
+    7: {
+        "title": "Extreme Cases (Cleanest vs Messiest)",
+        "explanation": "Best and worst spatial organization cases.",
+    },
+    8: {
+        "title": "Speed Comparison (Quick vs Slow Solvers)",
+        "explanation": "Efficiency versus exploration in successful runs.",
+    },
+    9: {
+        "title": "Card Repetition Patterns",
+        "explanation": "Repeated placements and revisits during sorting.",
+    },
+}
+
+
+def _valid_cards(cards):
+    return [
+        copy.deepcopy(card)
+        for card in cards or []
+        if isinstance(card, dict) and isinstance(card.get("row"), int) and isinstance(card.get("col"), int)
+    ]
+
+
+def _normalize_trial(trial):
+    normalized = copy.deepcopy(trial)
+    moves = _valid_cards(normalized.get("moves"))
+    final_state = _valid_cards(normalized.get("final_state"))
+    normalized["moves"] = moves
+    normalized["final_state"] = final_state
+    normalized["move_count"] = int(normalized.get("move_count") or len(moves) or 0)
+    normalized["blank_card_count"] = int(
+        normalized.get("blank_card_count")
+        or sum(1 for card in final_state if _is_blank(card))
+        or sum(1 for card in moves if _is_blank(card))
+        or 0
+    )
+    return normalized
+
+
+def _source_trials(raw):
+    analyses = raw.get("analysis_types", [])
+    analysis_six = next((a for a in analyses if a.get("id") == 6 and a.get("trials")), None)
+    source = analysis_six.get("trials", []) if analysis_six else [t for a in analyses for t in a.get("trials", [])]
+    return [_normalize_trial(t) for t in source if _normalize_trial(t).get("moves")]
+
+
+def _numeric(value, default=0.0):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _repetition_ratio(trial):
+    moves = trial.get("moves") or []
+    if not moves:
+        return 0.0
+    unique = {
+        f"{m.get('value', '')}-{m.get('suit_symbol', '')}-{m.get('row')}-{m.get('col')}"
+        for m in moves
+    }
+    return 1.0 - (len(unique) / len(moves))
+
+
+def _progression_delta(trial):
+    moves = trial.get("moves") or []
+    if len(moves) < 4:
+        return 0.0
+    segment_size = max(2, len(moves) // 3)
+    return _messiness_from_moves(moves[-segment_size:]) - _messiness_from_moves(moves[:segment_size])
+
+
+def _participant_sort_key(participant):
+    raw = str(participant)
+    try:
+        return (0, int(raw))
+    except ValueError:
+        return (1, raw)
+
+
+def _group_by_participant(trials):
+    groups = {}
+    for trial in trials:
+        key = str(trial.get("participant") or "N/A")
+        groups.setdefault(key, []).append(trial)
+    return groups
+
+
+def _recovery_score(trials):
+    failed = [t for t in trials if t.get("outcome") != "success"]
+    success = [t for t in trials if t.get("outcome") == "success"]
+    if not failed or not success:
+        return None
+    worst_fail_mess = max(_numeric(t.get("messiness_score"), _messiness_from_moves(t.get("moves") or [])) for t in failed)
+    best_success_mess = min(_numeric(t.get("messiness_score"), _messiness_from_moves(t.get("moves") or [])) for t in success)
+    worst_fail_moves = max(_numeric(t.get("move_count")) for t in failed)
+    best_success_moves = max(_numeric(t.get("move_count")) for t in success)
+    return (worst_fail_mess - best_success_mess) + max(0.0, best_success_moves - worst_fail_moves) * 0.12
+
+
+def _sort_trials_for_recovery_participant(trials):
+    failed = [t for t in trials if t.get("outcome") != "success"]
+    success = [t for t in trials if t.get("outcome") == "success"]
+
+    if failed and success:
+        worst_fail_mess = max(_numeric(t.get("messiness_score"), _messiness_from_moves(t.get("moves") or [])) for t in failed)
+        success_ranked = sorted(
+            success,
+            key=lambda t: (worst_fail_mess - _numeric(t.get("messiness_score"), _messiness_from_moves(t.get("moves") or [])))
+            + _numeric(t.get("move_count")) * 0.04,
+            reverse=True,
+        )
+        failed_ranked = sorted(
+            failed,
+            key=lambda t: _numeric(t.get("messiness_score"), _messiness_from_moves(t.get("moves") or [])),
+            reverse=True,
+        )
+        return success_ranked + failed_ranked
+
+    if success:
+        return sorted(success, key=lambda t: _numeric(t.get("messiness_score"), _messiness_from_moves(t.get("moves") or [])))
+    return sorted(failed, key=lambda t: _numeric(t.get("messiness_score"), _messiness_from_moves(t.get("moves") or [])), reverse=True)
+
+
+def _sort_trials_for_recovery(trials):
+    groups = _group_by_participant(trials)
+    meta = []
+    for participant, group in groups.items():
+        has_fail = any(t.get("outcome") != "success" for t in group)
+        has_success = any(t.get("outcome") == "success" for t in group)
+        score = _recovery_score(group)
+        meta.append((participant, has_fail and has_success, score))
+
+    meta.sort(
+        key=lambda row: (
+            0 if row[1] else 1,
+            -row[2] if row[2] is not None else 0,
+            _participant_sort_key(row[0]),
+        )
+    )
+
+    ordered = []
+    for participant, _, _ in meta:
+        ordered.extend(_sort_trials_for_recovery_participant(groups.get(participant, [])))
+    return ordered
+
+
+def _derive_analysis(raw, analysis_id):
+    analyses = raw.get("analysis_types", [])
+    by_id = {a.get("id"): a for a in analyses}
+    base = copy.deepcopy(by_id.get(analysis_id, {"id": analysis_id, "trials": []}))
+    base.update(ANALYSIS_DEFINITIONS.get(analysis_id, {}))
+
+    all_raw = _source_trials(raw)
+    non_empty = _dedupe_trials(all_raw)
+    valid_raw = [t for t in all_raw if int(t.get("move_count") or 0) >= MIN_VALID_MOVES]
+    valid = _dedupe_trials(valid_raw)
+    success = [t for t in valid if t.get("outcome") == "success"]
+    failed = [t for t in valid if t.get("outcome") != "success"]
+
+    derived = {
+        1: [t for t in success if int(t.get("move_count") or 0) >= 15][:24],
+        2: [t for t in failed if int(t.get("move_count") or 0) < 15][:24],
+        3: success[:32],
+        4: sorted(valid, key=lambda t: abs(_progression_delta(t)), reverse=True),
+        5: [
+            {**t, "moves": t.get("moves", [])[:5], "move_count": 5}
+            for t in valid
+            if len(t.get("moves", [])) >= 5
+        ][:32],
+        6: _sort_trials_for_recovery(all_raw),
+        7: (lambda sorted_trials: sorted_trials[:6] + sorted_trials[-6:])(
+            sorted(valid, key=lambda t: _numeric(t.get("messiness_score"), _messiness_from_moves(t.get("moves") or [])))
+        ),
+        8: (lambda sorted_success: sorted_success[:8] + sorted_success[-8:])(
+            sorted(success, key=lambda t: int(t.get("move_count") or 0))
+        ),
+        9: (lambda sorted_trials: sorted_trials[:8] + sorted_trials[-8:])(
+            sorted(valid, key=_repetition_ratio, reverse=True)
+        ),
+    }
+
+    fallback = [_normalize_trial(t) for t in base.get("trials", []) if _normalize_trial(t).get("moves")]
+    trials = derived.get(analysis_id) or fallback
+    base["trials"] = trials if analysis_id == 6 else _dedupe_trials(trials)
+    return base
 
 
 def _json_response(payload, no_store=True):
@@ -156,8 +370,8 @@ def _all_trials_for_condition(condition: str):
     for analysis in data.get("analysis_types", []):
         for t in analysis.get("trials", []):
             if t.get("condition") == condition:
-                trials.append(_merge_trial_blanks(t))
-    return trials
+                trials.append(copy.deepcopy(t))
+    return _dedupe_trials(trials)
 
 
 def _messiness_from_moves(moves):
@@ -212,7 +426,12 @@ def _trial_features(trial):
     move_count = int(trial.get("move_count") or len(moves) or 0)
     messiness = float(trial.get("messiness_score") or _messiness_from_moves(moves))
     slope = float(trial.get("organization_deterioration_rate") or _deterioration_slope(moves))
-    blank_count = int(trial.get("blank_card_count") or sum(1 for m in moves if _is_blank(m)))
+    final_state = trial.get("final_state") or []
+    blank_count = int(
+        trial.get("blank_card_count")
+        or sum(1 for card in final_state if _is_blank(card))
+        or sum(1 for m in moves if _is_blank(m))
+    )
     return {
         "participant": str(trial.get("participant") or "N/A"),
         "outcome": str(trial.get("outcome") or "unknown"),
@@ -402,7 +621,7 @@ def data_file():
 
 @app.route("/api/data")
 def api_data():
-    return _json_response(_enhance_data(_read_json()), no_store=True)
+    return _json_response(_read_json(), no_store=True)
 
 
 @app.route("/api/statistics")
@@ -413,11 +632,8 @@ def api_statistics():
 @app.route("/api/analysis/<int:analysis_id>")
 def api_analysis(analysis_id):
     raw = _read_json()
-    for analysis in raw.get("analysis_types", []):
-        if analysis.get("id") == analysis_id:
-            payload = copy.deepcopy(analysis)
-            payload["trials"] = [_merge_trial_blanks(t) for t in payload.get("trials", [])]
-            return _json_response(payload, no_store=True)
+    if 1 <= analysis_id <= 9:
+        return _json_response(_derive_analysis(raw, analysis_id), no_store=True)
     return _json_response({"error": "Analysis not found"}, no_store=True), 404
 
 

@@ -211,7 +211,27 @@ body {
     color: #fff;
 }
 .viewer-controls button.primary:hover { background: var(--primary-dark); }
+.viewer-controls button.final-state-btn {
+    background: linear-gradient(135deg, var(--gold), #d97706);
+    color: #fff;
+}
+.viewer-controls button.final-state-btn.active {
+    background: linear-gradient(135deg, #d97706, #b45309);
+}
 .counter { margin: 0; font-weight: 600; font-size: 0.82rem; }
+
+.mode-indicator {
+    display: none;
+    margin-bottom: 8px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--gold), #d97706);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-align: center;
+}
+.mode-indicator.active { display: block; }
 
 /* ── Stage (grid + meta) ──────────────────────────────────────────────────── */
 .viewer-stage {
@@ -546,4 +566,3 @@ body.embed-mode .container {
     box-shadow: none;
     background: rgba(255,255,255,0.95);
 }
-

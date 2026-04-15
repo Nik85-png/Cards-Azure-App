@@ -10,6 +10,24 @@ env/
 
 # Database (do not commit runtime SQLite DB)
 play_sessions.db
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Local config
+.env
+.env.*
+.python-version
+
+# Local virtual env / IDE
+.vscode/
+.idea/
 
 # OS
 .DS_Store

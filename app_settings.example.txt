@@ -1,0 +1,7 @@
+CARD_DATA_PATH=/home/site/wwwroot/data/card_analysis_data.json
+PLAY_DB_PATH=/home/site/wwwroot/play_sessions.db
+PARENT_ORIGIN=https://your-portfolio-domain
+ALLOWED_ORIGINS=https://your-portfolio-domain
+ENABLE_PLAYGROUND=true
+ENABLE_GIF_EXPORT=true
+ENABLE_HISTORY_TAB=true

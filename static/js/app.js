@@ -18,6 +18,7 @@ const state = {
     currentTrialIdx: 0,
     currentMoveIdx: 0,
     playing: false,
+    showingFinalState: false,
     speed: 800,
     timer: null,
     outcomeFilter: 'all',        // 'all' | 'success' | 'fail' | 'clean' | 'messy'
@@ -38,8 +39,12 @@ function initTabs() {
 }
 
 async function loadData() {
-    const res = await fetch('/api/data', { cache: 'no-store' });
-    state.data = await res.json();
+    try {
+        const res = await fetch('/api/data', { cache: 'no-store' });
+        state.data = await res.json();
+    } catch (error) {
+        state.data = { analysis_types: [], statistics: {} };
+    }
     state.analysis = buildAnalysisData(state.data);
 }
 
@@ -77,10 +82,13 @@ function renderAnalysisSelect() {
         state.currentAnalysisIdx = parseInt(select.value, 10) || 0;
         state.currentTrialIdx = 0;
         state.currentMoveIdx = 0;
+        state.showingFinalState = false;
         state.outcomeFilter = 'all';
         state.customPickedKeys = null;
         state.selectedParticipant = 'all';
         stopPlayback();
+        if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
         renderAnalysisExplanation();
         renderOutcomeFilter();
         renderParticipantSelect();
@@ -107,7 +115,7 @@ function renderTrialSelect() {
         const outcome = trial.outcome === 'success' ? 'SUCCESS' : 'FAIL';
         const condition = trial.condition || 'N/A';
         const moves = Number(trial.move_count ?? (trial.moves || []).length);
-        const blankTag = trial.has_blank_cards ? ' [blank]' : '';
+        const blankTag = (trial.blank_card_count || 0) > 0 || hasBlankInFinal(trial) ? ' [blank]' : '';
         const recoveryTag = currentAnalysis().id === 6 ? ` | ${trial.outcome === 'success' ? 'SUCCESS RECOVERY' : 'FAILED ATTEMPT'}` : '';
         const trialNumTag =
             currentAnalysis().id === 6 && Number.isFinite(Number(trial.trial_number))
@@ -126,7 +134,10 @@ function renderTrialSelect() {
     select.onchange = () => {
         state.currentTrialIdx = parseInt(select.value, 10) || 0;
         state.currentMoveIdx = 0;
+        state.showingFinalState = false;
         stopPlayback();
+        if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
         renderTrial();
     };
 }
@@ -173,7 +184,10 @@ function renderParticipantSelect() {
         state.selectedParticipant = select.value;
         state.currentTrialIdx = 0;
         state.currentMoveIdx = 0;
+        state.showingFinalState = false;
         stopPlayback();
+        if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
         renderTrialSelect();
         renderTrial();
     };
@@ -185,13 +199,32 @@ function trialMoveCount(trial) {
 
 function normalizeTrial(trial) {
     const moves = Array.isArray(trial.moves) ? trial.moves.filter((m) => Number.isInteger(m?.row) && Number.isInteger(m?.col)) : [];
+    const finalState = Array.isArray(trial.final_state)
+        ? trial.final_state.filter((m) => Number.isInteger(m?.row) && Number.isInteger(m?.col))
+        : [];
+    const blankCardCount = Number(
+        trial.blank_card_count
+        || finalState.filter((card) => isBlank(card)).length
+        || 0
+    );
     const moveCount = trialMoveCount({ ...trial, moves });
     return {
         ...trial,
         moves,
+        final_state: finalState,
         move_count: moveCount,
-        blank_card_count: Number(trial.blank_card_count || 0)
+        blank_card_count: blankCardCount
     };
+}
+
+function hasBlankInFinal(trial) {
+    if (!Array.isArray(trial?.final_state)) return false;
+    return trial.final_state.some((card) => isBlank(card));
+}
+
+function countBlankInFinal(trial) {
+    if (!Array.isArray(trial?.final_state)) return 0;
+    return trial.final_state.filter((card) => isBlank(card)).length;
 }
 
 function trialIdKey(trial) {
@@ -422,22 +455,33 @@ function renderGrid() {
     const root = $('grid');
     root.innerHTML = '';
     if (!trial) {
-        root.innerHTML = '<p class="muted">No trial selected.</p>';
+        root.innerHTML += '<div class="cell head"></div>';
+        for (let c = 0; c < 8; c++) root.innerHTML += `<div class="cell head">${c}</div>`;
+        for (let r = 0; r < 8; r++) {
+            root.innerHTML += `<div class="cell head">${r}</div>`;
+            for (let c = 0; c < 8; c++) root.innerHTML += '<div class="cell empty"></div>';
+        }
         $('moveCounter').textContent = 'Move 0 / 0';
         return;
     }
-    const moves = trial.moves || [];
-    const total = moves.length;
-    const current = total === 0 ? 0 : Math.min(state.currentMoveIdx + 1, total);
-    $('moveCounter').textContent = `Move ${current} / ${total}`;
 
     const isProgression = (state.analysis[state.currentAnalysisIdx]?.id === 4);
+    const moves = trial.moves || [];
     const totalMoves = moves.length;
     const gridState = {};
-    for (let i = 0; i <= state.currentMoveIdx && i < moves.length; i++) {
-        const m = moves[i];
-        if (Number.isInteger(m.row) && Number.isInteger(m.col)) {
-            gridState[`${m.row}-${m.col}`] = { ...m, current: i === state.currentMoveIdx, arrayIndex: i };
+
+    if (state.showingFinalState && Array.isArray(trial.final_state) && trial.final_state.length) {
+        trial.final_state.forEach((m) => {
+            if (Number.isInteger(m?.row) && Number.isInteger(m?.col)) {
+                gridState[`${m.row}-${m.col}`] = { ...m, current: false, arrayIndex: -1 };
+            }
+        });
+    } else {
+        for (let i = 0; i <= state.currentMoveIdx && i < moves.length; i++) {
+            const m = moves[i];
+            if (Number.isInteger(m?.row) && Number.isInteger(m?.col)) {
+                gridState[`${m.row}-${m.col}`] = { ...m, current: i === state.currentMoveIdx, arrayIndex: i };
+            }
         }
     }
 
@@ -454,7 +498,7 @@ function renderGrid() {
             }
             const blank = isBlank(m);
             let phaseClass = '';
-            if (isProgression && !m.current && totalMoves >= 6) {
+            if (!state.showingFinalState && isProgression && !m.current && totalMoves >= 6) {
                 const seg = Math.max(2, Math.floor(totalMoves / 3));
                 const ai = m.arrayIndex ?? 0;
                 if (ai < seg) phaseClass = ' phase-early';
@@ -473,6 +517,14 @@ function renderGrid() {
             root.innerHTML += `<div class="${cls}">${cardInner}</div>`;
         }
     }
+
+    if (state.showingFinalState) {
+        const finalCards = Array.isArray(trial.final_state) ? trial.final_state.length : 0;
+        $('moveCounter').textContent = `Final State: ${finalCards} cards placed`;
+    } else {
+        const current = totalMoves === 0 ? 0 : Math.min(state.currentMoveIdx + 1, totalMoves);
+        $('moveCounter').textContent = `Move ${current} / ${totalMoves}`;
+    }
 }
 
 function renderTrialInfo() {
@@ -483,13 +535,14 @@ function renderTrialInfo() {
     }
     const outcome = trial.outcome === 'success' ? 'Success' : 'Failed';
     const moves = Number(trial.move_count ?? (trial.moves || []).length);
+    const blankCount = countBlankInFinal(trial);
     $('trialInfo').innerHTML = `
         <p><strong>Participant:</strong> ${trial.participant || 'N/A'}</p>
         <p><strong>Outcome:</strong> ${outcome}</p>
         <p><strong>Condition:</strong> ${trial.condition || 'N/A'}</p>
         <p><strong>Total Moves:</strong> ${moves}</p>
         <p><strong>Messiness Score:</strong> ${typeof trial.messiness_score === 'number' ? trial.messiness_score.toFixed(2) : 'N/A'}</p>
-        <p><strong>Blank Cards:</strong> ${trial.blank_card_count || 0}</p>
+        <p><strong>Blank Cards:</strong> ${Number(trial.blank_card_count || blankCount || 0)}</p>
     `;
 }
 
@@ -506,6 +559,7 @@ function stopPlayback() {
 }
 
 function togglePlayback() {
+    if (state.showingFinalState) return;
     const trial = currentTrial();
     if (!trial || !(trial.moves || []).length) return;
     state.playing = !state.playing;
@@ -525,20 +579,49 @@ function togglePlayback() {
     }, state.speed);
 }
 
+function toggleFinalState() {
+    state.showingFinalState = !state.showingFinalState;
+    const finalStateBtn = $('finalStateBtn');
+    const modeIndicator = $('modeIndicator');
+    if (state.showingFinalState) {
+        stopPlayback();
+        if (finalStateBtn) {
+            finalStateBtn.classList.add('active');
+            finalStateBtn.textContent = 'Show Animation';
+        }
+        if (modeIndicator) modeIndicator.classList.add('active');
+    } else {
+        if (finalStateBtn) {
+            finalStateBtn.classList.remove('active');
+            finalStateBtn.textContent = 'Show Final State';
+        }
+        if (modeIndicator) modeIndicator.classList.remove('active');
+    }
+    renderTrial();
+}
+
 function bindControls() {
     if ($('openPickerBtn')) $('openPickerBtn').onclick = openTrialPicker;
     if ($('closePickerBtn')) $('closePickerBtn').onclick = closeTrialPicker;
     $('resetBtn').onclick = () => {
         stopPlayback();
         state.currentMoveIdx = 0;
+        state.showingFinalState = false;
+        if ($('finalStateBtn')) {
+            $('finalStateBtn').classList.remove('active');
+            $('finalStateBtn').textContent = 'Show Final State';
+        }
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
         renderTrial();
     };
     $('prevBtn').onclick = () => {
+        if (state.showingFinalState) return;
         stopPlayback();
         state.currentMoveIdx = Math.max(0, state.currentMoveIdx - 1);
         renderTrial();
     };
     $('nextBtn').onclick = () => {
+        if (state.showingFinalState) return;
         const trial = currentTrial();
         stopPlayback();
         const max = Math.max(0, (trial?.moves || []).length - 1);
@@ -546,6 +629,7 @@ function bindControls() {
         renderTrial();
     };
     $('playBtn').onclick = () => togglePlayback();
+    if ($('finalStateBtn')) $('finalStateBtn').onclick = () => toggleFinalState();
     $('speedRange').oninput = () => {
         state.speed = parseInt($('speedRange').value, 10) || 800;
         const factor = (2000 - state.speed) / 1000;
@@ -749,7 +833,10 @@ function renderOutcomeFilter() {
             state.outcomeFilter = btn.dataset.filter;
             state.currentTrialIdx = 0;
             state.currentMoveIdx = 0;
+            state.showingFinalState = false;
             stopPlayback();
+            if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+            if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
             renderOutcomeFilter();
             renderParticipantSelect();
             renderTrialSelect();
@@ -857,8 +944,11 @@ function _renderPickerContent() {
         if (currentAnalysis().id === 6) state.selectedParticipant = 'all';
         state.currentTrialIdx = 0;
         state.currentMoveIdx = 0;
+        state.showingFinalState = false;
         stopPlayback();
         closeTrialPicker();
+        if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
         renderOutcomeFilter();
         renderParticipantSelect();
         renderTrialSelect();
@@ -870,8 +960,11 @@ function _renderPickerContent() {
         if (currentAnalysis().id === 6) state.selectedParticipant = 'all';
         state.currentTrialIdx = 0;
         state.currentMoveIdx = 0;
+        state.showingFinalState = false;
         stopPlayback();
         closeTrialPicker();
+        if ($('finalStateBtn')) $('finalStateBtn').classList.remove('active');
+        if ($('modeIndicator')) $('modeIndicator').classList.remove('active');
         renderOutcomeFilter();
         renderParticipantSelect();
         renderTrialSelect();
