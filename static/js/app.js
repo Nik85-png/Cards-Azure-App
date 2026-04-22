@@ -50,7 +50,7 @@ async function loadData() {
 
 function renderStats() {
     const stats = state.data?.statistics || {};
-    $('stats').innerHTML = [
+    const markup = [
         ['Total Trials', Number(stats.total_trials || 766)],
         ['Success Rate', `${Number(stats.success_rate || 46.7).toFixed(1)}%`],
         ['Success With Blank', `${Number(stats.blank_card_success_rate || 73.3).toFixed(1)}%`],
@@ -58,6 +58,9 @@ function renderStats() {
     ]
         .map(([label, value]) => `<div class="stat-card"><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`)
         .join('');
+    $('stats').innerHTML = markup;
+    const statsPanelMetrics = $('statsPanelMetrics');
+    if (statsPanelMetrics) statsPanelMetrics.innerHTML = markup;
 }
 
 function currentAnalysis() {

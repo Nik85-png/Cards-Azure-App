@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -6,7 +6,7 @@
     <title>Card Sorting Analysis</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
 </head>
@@ -56,7 +56,7 @@
                         <button id="finalStateBtn" type="button" class="final-state-btn">Show Final State</button>
                     </div>
 
-                    <div class="buttons">
+                    <div class="buttons playback-controls" aria-label="Playback controls">
                         <button id="resetBtn" type="button">Reset</button>
                         <button id="prevBtn" type="button">Prev</button>
                         <button id="playBtn" type="button" class="primary">Play</button>
@@ -95,84 +95,89 @@
             <details class="doc-accordion" open>
                 <summary class="doc-toggle">Project Documentation &amp; Findings</summary>
                 <div class="project-doc">
-                    <div class="doc-grid">
-                        <div class="card">
-                            <h2>Project Overview</h2>
-                            <p>This project investigates how people organise information spatially and the cognitive strategies they employ when solving card arrangement tasks.</p>
-                            <p>Participants used an interactive 8&times;8 grid to arrange playing cards (Kings, Queens, Jacks, and blank cards), while every movement was tracked.</p>
-                            <p><strong>Core question:</strong> what separates successful problem-solvers from those who struggle?</p>
+                    <div class="doc-hero">
+                        <span class="doc-kicker">Behavioural movement analysis</span>
+                        <h2>How people arrange the cards is the signal.</h2>
+                        <p>
+                            This viewer treats every card placement as evidence of strategy. The final outcome matters,
+                            but the movement path reveals whether a participant was building an organised spatial plan,
+                            repeatedly undoing work, using blank cards as scaffolding, or recovering across repeated attempts.
+                        </p>
+                    </div>
+
+                    <div class="insight-grid">
+                        <article class="insight-card tone-green">
+                            <span class="insight-label">Dataset</span>
+                            <strong>766 recorded trials</strong>
+                            <p>714 trials contain enough movement data for animation and comparison after filtering unusable or empty movement logs.</p>
+                        </article>
+                        <article class="insight-card tone-gold">
+                            <span class="insight-label">Task</span>
+                            <strong>8&times;8 spatial board</strong>
+                            <p>Participants arranged Kings, Queens, Jacks, and sometimes blank cards while each row, column, card identity, and outcome was preserved.</p>
+                        </article>
+                        <article class="insight-card tone-clay">
+                            <span class="insight-label">Core signal</span>
+                            <strong>Messiness and recovery</strong>
+                            <p>The interface compares final organisation, within-trial progression, repeated attempts, speed, and repeated card placements.</p>
+                        </article>
+                    </div>
+
+                    <div class="doc-grid doc-grid-wide">
+                        <div class="card doc-panel">
+                            <h2>How to Read the Viewer</h2>
+                            <p><strong>Analysis Type</strong> changes the behavioural question being asked. Some views focus on clean successes, some on messy failures, and some on progression or repeated attempts.</p>
+                            <p><strong>Participant</strong> appears for repeated-attempt analysis only. It lets you compare all trials for one person chronologically instead of mixing everyone together.</p>
+                            <p><strong>Trial</strong> selects the exact movement sequence. The dropdown includes participant ID, outcome, condition, move count, messiness, and recovery labels where relevant.</p>
+                            <p><strong>Show Final State</strong> jumps to the final board, including blank cards, so you can inspect the completed organisation without playing every move.</p>
                         </div>
 
-                        <div class="card">
-                            <h2>What We Measured</h2>
-                            <p><strong>766 recorded trials</strong> across four conditions, including <strong>714 usable movement trials</strong> for animation and comparison:</p>
+                        <div class="card doc-panel">
+                            <h2>Conditions and Materials</h2>
                             <table class="doc-table">
-                                <thead><tr><th>Condition</th><th>Description</th></tr></thead>
+                                <thead><tr><th>Condition</th><th>Cards Available</th><th>Interpretation</th></tr></thead>
                                 <tbody>
-                                    <tr><td>KQ</td><td>King &amp; Queen only</td></tr>
-                                    <tr><td>KQB</td><td>King, Queen &amp; Blank</td></tr>
-                                    <tr><td>KQJ</td><td>King, Queen &amp; Jack</td></tr>
-                                    <tr><td>KQJB</td><td>King, Queen, Jack &amp; Blank</td></tr>
+                                    <tr><td>KQ</td><td>King + Queen</td><td>Simple rank grouping without extra working-memory load.</td></tr>
+                                    <tr><td>KQB</td><td>King + Queen + Blank</td><td>Tests whether blank cards help participants scaffold a layout.</td></tr>
+                                    <tr><td>KQJ</td><td>King + Queen + Jack</td><td>Adds a third rank, increasing organisation complexity.</td></tr>
+                                    <tr><td>KQJB</td><td>King + Queen + Jack + Blank</td><td>Combines higher card complexity with optional blank-card support.</td></tr>
                                 </tbody>
                             </table>
                         </div>
+                    </div>
 
-                        <div class="card">
-                            <h2>Nine Analysis Views</h2>
-                            <ol class="doc-list compact-list">
-                                <li><strong>Successful Clean (15+)</strong> &mdash; organised play</li>
-                                <li><strong>Failed Messy (&lt;15)</strong> &mdash; unstable organisation</li>
-                                <li><strong>All Successful</strong> &mdash; winning paths</li>
-                                <li><strong>Early vs Late</strong> &mdash; progression phases</li>
-                                <li><strong>Opening Strategies</strong> &mdash; first 5 moves</li>
-                                <li><strong>Repeated Attempts &amp; Success Recovery</strong> &mdash; participants with multiple usable trials</li>
-                                <li><strong>Extreme Cases</strong> &mdash; cleanest vs messiest</li>
-                                <li><strong>Speed Comparison</strong> &mdash; quick vs slow</li>
-                                <li><strong>Repetition Patterns</strong> &mdash; focused vs broad</li>
-                            </ol>
-                        </div>
-
-                        <div class="card">
-                            <h2>Key Findings</h2>
-                            <h3>Organisation &gt; Effort</h3>
-                            <p>Failures showed <strong>63% faster organisational decline</strong> (p&nbsp;=&nbsp;0.0085). Success was about staying systematic.</p>
-                            <h3>Blank Card Advantage</h3>
-                            <p>Blank card users: <strong>+29&ndash;36%</strong> success rate uplift (&chi;&sup2;, p&nbsp;&lt;&nbsp;0.01).</p>
-                            <h3>Learning is Rare</h3>
-                            <p>Only <strong>14%</strong> of failures recovered on later attempts.</p>
-                            <h3>Messiness Predicts Outcome</h3>
-                            <p>Clean trials (&lt;&nbsp;2.0): <strong>68%</strong> success. Messy (&gt;&nbsp;3.5): <strong>18%</strong>.</p>
+                    <div class="card doc-panel analysis-panel">
+                        <h2>Nine Analysis Views</h2>
+                        <div class="analysis-list">
+                            <p><strong>1. Successful Clean Patterns</strong> &mdash; successful trials with enough movement to show strategy rather than a trivial placement.</p>
+                            <p><strong>2. Failed Messy Patterns</strong> &mdash; failed trials where organisation breaks down early or never stabilises.</p>
+                            <p><strong>3. All Successful Trials</strong> &mdash; a broad comparison of winning paths, including different move counts and conditions.</p>
+                            <p><strong>4. In-Trial Progression</strong> &mdash; highlights early moves in blue and late moves in orange so improvement or deterioration is visible inside one trial.</p>
+                            <p><strong>5. Opening Strategies</strong> &mdash; focuses on the first five moves, because early anchors often shape the rest of the layout.</p>
+                            <p><strong>6. Repeated Attempts and Success Recovery</strong> &mdash; only participants with multiple usable trials are shown, making retry/progression comparisons meaningful.</p>
+                            <p><strong>7. Extreme Cases by Outcome</strong> &mdash; cleanest and messiest examples are separated by success/failure so extremes do not collapse into only failed trials.</p>
+                            <p><strong>8. Speed Comparison</strong> &mdash; compares quick successful solvers with slower successful solvers to separate efficiency from exploration.</p>
+                            <p><strong>9. Card Repetition Patterns</strong> &mdash; surfaces whether participants repeatedly revisit the same card/position or explore broadly.</p>
                         </div>
                     </div>
 
                     <div class="doc-grid">
-                        <div class="card">
-                            <h2>Statistical Notes</h2>
-                            <table class="doc-table">
-                                <thead><tr><th>Test</th><th>Result</th></tr></thead>
-                                <tbody>
-                                    <tr><td>Messiness deterioration</td><td>t(227) = 2.67, p = 0.0085</td></tr>
-                                    <tr><td>Blank card effect</td><td>&chi;&sup2;, p &lt; 0.01</td></tr>
-                                    <tr><td>Organisation categories</td><td>F(2,226) = 42.1, p &lt; 0.001</td></tr>
-                                </tbody>
-                            </table>
-                            <table class="doc-table" style="margin-top:8px">
-                                <thead><tr><th>Effect</th><th>Size</th></tr></thead>
-                                <tbody>
-                                    <tr><td>Messiness on success</td><td>Cohen&rsquo;s d = 1.24 (large)</td></tr>
-                                    <tr><td>Blank-card usage</td><td>Cramer&rsquo;s V = 0.38</td></tr>
-                                </tbody>
-                            </table>
+                        <div class="card doc-panel">
+                            <h2>Key Findings</h2>
+                            <h3>Organisation beats raw effort</h3>
+                            <p>More moves do not automatically mean better strategy. Successful participants tend to preserve coherent regions, while failed trials often show repeated local changes without a stable global plan.</p>
+                            <h3>Blank cards act like scaffolding</h3>
+                            <p>When blanks are available, they can function as external working-memory placeholders. The advantage is strongest when participants use blanks to reserve structure rather than treating them as random fillers.</p>
+                            <h3>Recovery is uncommon but informative</h3>
+                            <p>Repeated attempts are especially useful because they show whether a participant changes strategy after failure or simply repeats the same unstable pattern.</p>
                         </div>
 
-                        <div class="card">
-                            <h2>Practical Implications</h2>
-                            <ul class="doc-list">
-                                <li>Training should emphasise organisational strategy, not repetition</li>
-                                <li>Flexible tools (blank cards) materially improve outcomes</li>
-                                <li>Early intervention matters &mdash; strategy recovery is rare</li>
-                                <li>Messiness acts as an early warning signal of struggle</li>
-                            </ul>
+                        <div class="card doc-panel">
+                            <h2>Statistical Interpretation</h2>
+                            <p><strong>Messiness score</strong> summarises spatial disorder in the final or evolving layout. Lower values indicate tighter grouping and cleaner spatial structure.</p>
+                            <p><strong>Move count</strong> is not treated as success by itself. It is useful only when interpreted alongside outcome, messiness, condition, and whether movements are repetitive.</p>
+                            <p><strong>Blank-card comparisons</strong> show whether conditions with blank cards improve completion rates, but the interpretation is behavioural support, not proof that blanks alone cause success.</p>
+                            <p><strong>Progression views</strong> are descriptive. They reveal within-trial change, but should be read as strategy evidence rather than a clinical-style prediction model.</p>
                         </div>
                     </div>
                 </div>
@@ -182,13 +187,23 @@
 
         <!-- STATISTICS PANEL -->
         <section id="panel-statistics" class="page-panel">
+            <div class="stats-intro">
+                <span class="doc-kicker">Statistical summary</span>
+                <h2>Charts are evidence, not decoration.</h2>
+                <p>
+                    These plots summarise the behavioural dataset behind the viewer. Read them together:
+                    success rate, condition, messiness, move count, and blank-card use each explain a different
+                    part of strategy quality.
+                </p>
+            </div>
+            <section class="stats stats-panel-metrics" id="statsPanelMetrics"></section>
             <section class="charts">
-                <div class="card"><h3>Trial Summary</h3><div id="summaryChart"></div></div>
-                <div class="card"><h3>Success Rate by Condition</h3><div id="conditionChart"></div></div>
-                <div class="card"><h3>Messiness Deterioration</h3><div id="messinessChart"></div></div>
-                <div class="card"><h3>Move Count Distribution</h3><div id="moveDistChart"></div></div>
-                <div class="card"><h3>Blank Card Advantage</h3><div id="blankChart"></div></div>
-                <div class="card"><h3>Messiness Distribution by Outcome</h3><div id="messinessBoxChart"></div></div>
+                <div class="card chart-card"><h3>Trial Summary</h3><p class="chart-note">Counts the usable trials by final outcome. This gives the base rate before interpreting strategy details.</p><div id="summaryChart"></div></div>
+                <div class="card chart-card"><h3>Success Rate by Condition</h3><p class="chart-note">Compares how task materials affect completion. Conditions with blanks should be read as support/scaffolding opportunities.</p><div id="conditionChart"></div></div>
+                <div class="card chart-card"><h3>Messiness by Outcome</h3><p class="chart-note">Contrasts average spatial disorder for successful and failed trials. Lower messiness usually means clearer grouping.</p><div id="messinessChart"></div></div>
+                <div class="card chart-card"><h3>Move Count Distribution</h3><p class="chart-note">Shows whether successful and failed participants differ in exploration volume. More movement is not automatically better.</p><div id="moveDistChart"></div></div>
+                <div class="card chart-card"><h3>Blank Card Advantage</h3><p class="chart-note">Compares success rates when blank cards appear versus when they do not. This is behavioural evidence for scaffolding.</p><div id="blankChart"></div></div>
+                <div class="card chart-card"><h3>Messiness Distribution</h3><p class="chart-note">Box plots show spread, mean, and outliers, making it easier to see whether failures are consistently messier.</p><div id="messinessBoxChart"></div></div>
             </section>
         </section>
 
